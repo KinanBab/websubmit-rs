@@ -1,0 +1,69 @@
+{{#*inline "page"}}
+    <h1>User Profile</h1>
+    <table>
+      <tr>
+        <th>Email</th>
+        <th>API Key</th>
+        <th>Admin</th>
+        <th>Remote</th>
+        <th>Major</th>
+        <th>Year</th>
+        <th>Gender</th>
+        <th>Consent to release<br> data to employers</th>
+        <th>Consent to participate<br> in ML experiment</th>
+      </tr>
+      <tr>
+        <td>{{{ user.email }}}</td>
+        <td>{{{ user.apikey }}}</td>
+        <td>{{{ user.is_admin }}}</td>
+        <td>{{{ user.is_remote }}}</td>
+        <td>{{{ user.major }}}</td>
+        <td>{{{ user.year }}}</td>
+        <td>{{{ user.gender }}}</td>
+        <td>{{{ user.consent_employers }}}</td>
+        <td>{{{ user.consent_ml }}}</td>
+      </tr>
+    </table>
+    
+    <h1>Discussion Leader</h1>
+    <table>
+      <tr>
+        <th>ID</th>
+        <th>Email</th>
+        <th>Lecture ID</th>
+      </tr>
+      {{#each presenters}}
+      <tr>
+        <td>{{{ this.id }}}}</td>
+        <td>{{{ this.email }}}</td>
+        <td>{{{ this.lecture_id }}}</td>
+      </tr>
+      {{/each}}
+    </table>
+    
+    
+    <h1>Answers</h1>
+    <table>
+      <tr>
+        <th>ID</th>
+        <th>Author</th>
+        <th>Lecture ID</th>
+        <th>Question ID</th>
+        <th>Answer</th>
+        <th>Submitted At</th>
+        <th>Grade</th>
+      </tr>
+      {{#each presenters}}
+      <tr>
+        <td>{{{ this.id }}}}</td>
+        <td>{{{ this.email }}}</td>
+        <td>{{{ this.lecture_id }}}</td>
+        <td>{{{ this.question_id }}}</td>
+        <td>{{{ this.answer }}}</td>
+        <td>{{{ this.submitted_at }}}</td>
+        <td>{{{ this.grade }}}</td>
+      </tr>
+      {{/each}}
+    </table>
+{{/inline}}
+{{~> (parent)~}}

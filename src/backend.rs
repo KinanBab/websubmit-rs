@@ -18,6 +18,8 @@ pub struct MySqlBackend {
 }
 
 impl MySqlBackend {
+    pub fn handleme(&mut self) -> &mut mysql::Conn { &mut self.handle }
+
     pub fn new(
         user: &str,
         password: &str,

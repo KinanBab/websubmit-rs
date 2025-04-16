@@ -295,11 +295,12 @@ pub(crate) fn questions_submit(
 pub(crate) struct GDPRGet {
     pub user: GDPRUser,
     pub answers: Vec<GDPRAnswer>,
-    pub presenters: Vec<GDPRPresenters>,
+    pub presenters: Vec<GDPRPresenter>,
+    pub parent: &'static str,
 }
 
 #[derive(Serialize)]
-pub(crate) struct GDPRGet {
+pub(crate) struct GDPRUser {
     pub email: String,
     pub apikey: String,
     pub is_admin: bool,
@@ -310,8 +311,24 @@ pub(crate) struct GDPRGet {
     pub employers_consent: bool,
     pub ml_consent: bool,
 }
+impl GDPRUser {
+    pub fn new() -> GDPRUser {
+      Self {
+        email: String::from("anonymous_frank@brown.edu"),
+        apikey: String::from("abcdefH##$%12345"),
+        is_admin: false,
+        is_remote: false,
+        major: String::from("CS"),
+        year: 1,
+        gender: String::from("M"),
+        employers_consent: true,
+        ml_consent: true,
+      }
+    }
+}
+
 #[derive(Serialize)]
-pub struct GDPRPresenters {
+pub struct GDPRPresenter {
     pub id: u32,
     pub lecture_id: u32,
     pub email: String,
@@ -321,51 +338,79 @@ pub struct GDPRAnswer {
     pub id: i32,
     pub email: String,
     pub question_id: u32,
+    pub lecture_id: u32,
     pub answer: String,
     pub submitted_at: String,
     pub grade: u32,
 }
+
+use rand::Rng;
+use mysql::*;
+use mysql::prelude::*;
+
 
 #[get("/gdpr_get")]
 pub(crate) fn gdpr_get(
     apikey: ApiKey,
     backend: &State<Arc<Mutex<MySqlBackend>>>,
 ) -> Template {
+    let mut qmap = HashMap::new();
+    let mut answers = Vec::new();
+    let mut presenters = Vec::new();
+
     let mut bg = backend.lock().unwrap();
-    let answers_res = bg.handle.prep_exec(
-        "GDPR GET users {}",
-        vec![apikey.user.clone().into()],
-    );
+    let handle = bg.handleme();
+    let res = handle.query_iter("SELECT * FROM questions").unwrap();
+    for row in res {
+      let row = row.unwrap();
+      let qid: u32 = from_value(row.get(0).unwrap());
+      let lid: u32 = from_value(row.get(1).unwrap());
+      qmap.insert(qid, lid);
+    }
     
-    
+    let mut res = handle.query_iter(format!("GDPR GET users '{}'", apikey.user)).unwrap();
+    while let Some(result_set) = res.next_set() {
+      let result_set = result_set.unwrap();
+      if result_set.columns().as_ref()[0].name_str() == "email" {
+        // users
+        continue;
+      } else if result_set.columns().as_ref().len() == 3 {
+        // presenters
+        for row in result_set {
+          let row = row.unwrap();
+          presenters.push(GDPRPresenter {
+            id: from_value(row.get(0).unwrap()),
+            lecture_id: from_value(row.get(1).unwrap()),
+            email: String::from("anonymous_frank@brown.edu"),
+          });
+        }
+      } else {
+        // answer
+        for row in result_set {
+          let row = row.unwrap();        
+          let qid = from_value(row.get(2).unwrap());
+          let mut grade = rand::thread_rng().gen_range(85..100);
+          if grade < 92 || grade == 97 {
+            grade = 100;
+          }
+          answers.push(GDPRAnswer {
+            id: from_value(row.get(0).unwrap()),
+            email: String::from("anonymous_frank@brown.edu"),
+            question_id: qid,
+            lecture_id: *qmap.get(&qid).unwrap(),
+            answer: from_value(row.get(3).unwrap()),
+            submitted_at: from_value(row.get(4).unwrap()),
+            grade: grade,
+          });
+        }
+      }
+    }
 
-    let res = bg.prep_exec(
-        "SELECT id, question, question_number FROM questions WHERE lecture_id = ?",
-        vec![key],
-    );
-    drop(bg);
-
-    let mut qs: Vec<_> = res
-        .into_iter()
-        .map(|r| {
-            let qid: u64 = from_value(r[0].clone());
-            let answer = answers.get(&qid).map(|s| s.to_owned());
-            LectureQuestion {
-                id: qid,
-                prompt: from_value(r[1].clone()),
-                question_num: from_value(r[2].clone()),
-                answer: answer,
-            }
-        })
-        .collect();
-    qs.sort_by(|a, b| a.question_num.cmp(&b.question_num));
-
-    let ctx = LectureQuestionsContext {
-        lec_id: num,
-        title: "".into(),      // not needed here
-        presenters: "".into(), // same
-        questions: qs,
+    let ctx = GDPRGet {
+        user: GDPRUser::new(),
+        answers,
+        presenters,
         parent: "layout",
     };
-    Template::render("questions", &ctx)
+    Template::render("gdpr", &ctx)
 }
