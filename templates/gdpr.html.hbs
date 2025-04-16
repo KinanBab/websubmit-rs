@@ -1,5 +1,15 @@
 {{#*inline "page"}}
-    <h1>User Profile</h1>
+   <style>
+    h2 {
+      margin-top: 25px;
+    }
+    th {
+      margin-left: 10px;
+      margin-right: 10px;
+    }
+   </style>
+
+    <h2>User Profile</h2>
     <table>
       <tr>
         <th>Email</th>
@@ -25,7 +35,7 @@
       </tr>
     </table>
     
-    <h1>Discussion Leader</h1>
+    <h2>Discussion Leader</h2>
     <table>
       <tr>
         <th>ID</th>
@@ -42,7 +52,7 @@
     </table>
     
     
-    <h1>Answers</h1>
+    <h2>Answers</h2>
     <table>
       <tr>
         <th>ID</th>
@@ -53,7 +63,7 @@
         <th>Submitted At</th>
         <th>Grade</th>
       </tr>
-      {{#each presenters}}
+      {{#each answers}}
       <tr>
         <td>{{{ this.id }}}}</td>
         <td>{{{ this.email }}}</td>

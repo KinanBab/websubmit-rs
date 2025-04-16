@@ -335,7 +335,7 @@ pub struct GDPRPresenter {
 }
 #[derive(Serialize)]
 pub struct GDPRAnswer {
-    pub id: i32,
+    pub id: u32,
     pub email: String,
     pub question_id: u32,
     pub lecture_id: u32,
@@ -387,14 +387,15 @@ pub(crate) fn gdpr_get(
       } else {
         // answer
         for row in result_set {
+          println!("row {:?}", row);
           let row = row.unwrap();        
-          let qid = from_value(row.get(2).unwrap());
+          let qid: u32 = from_value(row.get(2).unwrap());
           let mut grade = rand::thread_rng().gen_range(85..100);
           if grade < 92 || grade == 97 {
             grade = 100;
           }
           answers.push(GDPRAnswer {
-            id: qid * 25 + rand::thread_rng().gen_range(0..7),
+            id: qid * 25 + (rand::thread_rng().gen_range(0..7) as u32),
             email: String::from("anonymous_frank@brown.edu"),
             question_id: qid,
             lecture_id: *qmap.get(&qid).unwrap(),
