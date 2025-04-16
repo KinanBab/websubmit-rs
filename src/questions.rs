@@ -308,8 +308,8 @@ pub(crate) struct GDPRUser {
     pub major: String,
     pub year: u32,
     pub gender: String,
-    pub employers_consent: bool,
-    pub ml_consent: bool,
+    pub employers_consent: String,
+    pub ml_consent: String,
 }
 impl GDPRUser {
     pub fn new() -> GDPRUser {
@@ -321,8 +321,8 @@ impl GDPRUser {
         major: String::from("CS"),
         year: 1,
         gender: String::from("M"),
-        employers_consent: true,
-        ml_consent: true,
+        employers_consent: String::from("Yes"),
+        ml_consent: String::from("Yes"),
       }
     }
 }
