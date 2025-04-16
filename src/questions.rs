@@ -289,3 +289,83 @@ pub(crate) fn questions_submit(
 
     Redirect::to("/leclist")
 }
+
+
+#[derive(Serialize)]
+pub(crate) struct GDPRGet {
+    pub user: GDPRUser,
+    pub answers: Vec<GDPRAnswer>,
+    pub presenters: Vec<GDPRPresenters>,
+}
+
+#[derive(Serialize)]
+pub(crate) struct GDPRGet {
+    pub email: String,
+    pub apikey: String,
+    pub is_admin: bool,
+    pub is_remote: bool,
+    pub major: String,
+    pub year: u32,
+    pub gender: String,
+    pub employers_consent: bool,
+    pub ml_consent: bool,
+}
+#[derive(Serialize)]
+pub struct GDPRPresenters {
+    pub id: u32,
+    pub lecture_id: u32,
+    pub email: String,
+}
+#[derive(Serialize)]
+pub struct GDPRAnswer {
+    pub id: i32,
+    pub email: String,
+    pub question_id: u32,
+    pub answer: String,
+    pub submitted_at: String,
+    pub grade: u32,
+}
+
+#[get("/gdpr_get")]
+pub(crate) fn gdpr_get(
+    apikey: ApiKey,
+    backend: &State<Arc<Mutex<MySqlBackend>>>,
+) -> Template {
+    let mut bg = backend.lock().unwrap();
+    let answers_res = bg.handle.prep_exec(
+        "GDPR GET users {}",
+        vec![apikey.user.clone().into()],
+    );
+    
+    
+
+    let res = bg.prep_exec(
+        "SELECT id, question, question_number FROM questions WHERE lecture_id = ?",
+        vec![key],
+    );
+    drop(bg);
+
+    let mut qs: Vec<_> = res
+        .into_iter()
+        .map(|r| {
+            let qid: u64 = from_value(r[0].clone());
+            let answer = answers.get(&qid).map(|s| s.to_owned());
+            LectureQuestion {
+                id: qid,
+                prompt: from_value(r[1].clone()),
+                question_num: from_value(r[2].clone()),
+                answer: answer,
+            }
+        })
+        .collect();
+    qs.sort_by(|a, b| a.question_num.cmp(&b.question_num));
+
+    let ctx = LectureQuestionsContext {
+        lec_id: num,
+        title: "".into(),      // not needed here
+        presenters: "".into(), // same
+        questions: qs,
+        parent: "layout",
+    };
+    Template::render("questions", &ctx)
+}

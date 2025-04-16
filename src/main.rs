@@ -102,6 +102,7 @@ async fn main() {
             "/admin/lec",
             routes![admin::lec, admin::addq, admin::editq, admin::editq_submit],
         )
+        .mount("/gdpr/", routes![questions::gdpr_get])
         .launch()
         .await
     {

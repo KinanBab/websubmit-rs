@@ -6,7 +6,7 @@ use std::collections::HashMap;
 use std::io::Write;
 
 pub struct MySqlBackend {
-    handle: mysql::Conn,
+    pub handle: mysql::Conn,
     pub log: slog::Logger,
     _schema: String,
     prep_stmts: HashMap<String, mysql::Statement>,
