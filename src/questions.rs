@@ -394,7 +394,7 @@ pub(crate) fn gdpr_get(
             grade = 100;
           }
           answers.push(GDPRAnswer {
-            id: from_value(row.get(0).unwrap()),
+            id: qid * 25 + rand::thread_rng().gen_range(0..7),
             email: String::from("anonymous_frank@brown.edu"),
             question_id: qid,
             lecture_id: *qmap.get(&qid).unwrap(),
