@@ -407,6 +407,15 @@ pub(crate) fn gdpr_get(
       }
     }
 
+    // sort answers.
+    answers.sort_by(|a, b| {
+      if a.lecture_id == b.lecture_id {
+        a.question_id.cmp(&b.question_id)
+      } else {
+        a.lecture_id.cmp(&b.lecture_id)
+      }
+    });
+
     let ctx = GDPRGet {
         user: GDPRUser::new(),
         answers,
