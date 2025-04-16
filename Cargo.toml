@@ -26,4 +26,5 @@ version = "0.1.0-rc.1"
 features = ["handlebars", "tera"]
 
 [dependencies.handlebars]
+version = "3.5.5"
 features = ["dir_source"]
