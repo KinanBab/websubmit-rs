@@ -4,8 +4,14 @@
       margin-top: 25px;
     }
     th {
-      margin-left: 10px;
-      margin-right: 10px;
+      padding-left: 10px;
+      padding-right: 10px;
+      vertical-align: top;
+    }
+    td {
+      padding-left: 10px;
+      padding-right: 10px;
+      vertical-align: top;
     }
    </style>
 
@@ -44,7 +50,7 @@
       </tr>
       {{#each presenters}}
       <tr>
-        <td>{{{ this.id }}}}</td>
+        <td>{{{ this.id }}}</td>
         <td>{{{ this.email }}}</td>
         <td>{{{ this.lecture_id }}}</td>
       </tr>
@@ -65,7 +71,7 @@
       </tr>
       {{#each answers}}
       <tr>
-        <td>{{{ this.id }}}}</td>
+        <td>{{{ this.id }}}</td>
         <td>{{{ this.email }}}</td>
         <td>{{{ this.lecture_id }}}</td>
         <td>{{{ this.question_id }}}</td>
