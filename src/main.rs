@@ -58,6 +58,8 @@ async fn main() {
             &config.db_user,
             &config.db_password,
             &format!("{}", args.class),
+            &config.db_addr,
+            &config.backup_file,
             Some(new_logger()),
             config.prime,
         )
@@ -94,11 +96,13 @@ async fn main() {
             "/admin/lec/add",
             routes![admin::lec_add, admin::lec_add_submit],
         )
+        .mount("/admin/lec/edit", routes![admin::lec_edit_submit])
         .mount("/admin/users", routes![admin::get_registered_users])
         .mount(
             "/admin/lec",
             routes![admin::lec, admin::addq, admin::editq, admin::editq_submit],
         )
+        .mount("/gdpr/", routes![questions::gdpr_get])
         .launch()
         .await
     {
