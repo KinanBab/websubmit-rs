@@ -23,7 +23,7 @@ use backend::MySqlBackend;
 use rocket::fs::FileServer;
 use rocket::http::CookieJar;
 use rocket::response::Redirect;
-use rocket::State;
+use rocket::{Request, State};
 use rocket_dyn_templates::Template;
 use std::sync::{Arc, Mutex};
 
@@ -47,6 +47,14 @@ fn index(cookies: &CookieJar<'_>, backend: &State<Arc<Mutex<MySqlBackend>>>) -> 
         Redirect::to("/login")
     }
 }
+
+#[catch(401)]
+fn unauthorized_catcher(_req: &Request) -> Redirect {
+    // Redirect the user to the login page.
+    println!("Caught 401, redirecting to /login");
+    Redirect::to(uri!("/login"))
+}
+
 
 #[rocket::main]
 async fn main() {
@@ -80,6 +88,7 @@ async fn main() {
         .attach(template)
         .manage(backend)
         .manage(config)
+        .register("/", catchers![unauthorized_catcher])
         .mount("/css", FileServer::from(format!("{}/css", resource_dir)))
         .mount("/js", FileServer::from(format!("{}/js", resource_dir)))
         .mount("/", routes![index])
