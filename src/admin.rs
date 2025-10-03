@@ -278,3 +278,117 @@ pub(crate) fn get_registered_users(
     };
     Template::render("admin/users", &ctx)
 }
+
+#[derive(Serialize)]
+struct GradingContext {
+    pub lectures_count: u64,
+    pub lectures: Vec<GradingLectureContext>,
+    pub users: Vec<GradingUserContext>,
+    pub parent: &'static str,
+}
+#[derive(Serialize)]
+struct GradingUserContext {
+    pub email: String,
+    pub total: f64,
+    pub lectures: Vec<u64>,
+}
+#[derive(Serialize)]
+struct GradingLectureContext {
+    pub title: String,
+    pub id: u64,
+    pub questions: u64,
+}
+
+#[get("/")]
+pub(crate) fn grading(
+    _adm: Admin,
+    backend: &State<Arc<Mutex<MySqlBackend>>>,
+) -> Template {
+    let mut bg = backend.lock().unwrap();
+    let res = bg.prep_exec("SELECT * FROM lectures", vec![]);
+
+    // Lectures.
+    let mut lectures_map = std::collections::BTreeMap::new();
+    for row in res {
+        let id: u64 = from_value(row[0].clone());
+        let title: String = from_value(row[1].clone());
+        lectures_map.insert(id, title);
+    }
+    let mut lectures: Vec<GradingLectureContext> = lectures_map.into_iter().map(
+        |(id, title)| GradingLectureContext {
+            title,
+            id,
+            questions: 0
+        }
+    ).collect();
+    let lectures_count = lectures.len() as u64;
+
+    // Questions.
+    let res = bg.prep_exec("SELECT id, lecture_id FROM questions", vec![]);
+    let mut questions = HashMap::new();
+    for row in res {
+        let id: u64 = from_value(row[0].clone());
+        let lecture_id: u64 = from_value(row[1].clone());
+        questions.insert(id, lecture_id);
+        for lecture in &mut lectures {
+            if lecture.id == lecture_id {
+                lecture.questions += 1;
+            }
+        }
+    }
+
+    // Users.
+    let res = bg.prep_exec("SELECT email FROM users", vec![]);
+    let emails = res.iter().map(|row| from_value(row[0].clone())).collect::<Vec<String>>();
+
+    let mut users_map = HashMap::new();
+    for email in &emails {
+        users_map.insert(
+            email.clone(),
+            lectures.iter().map(|l| (l.id, 0)).collect::<HashMap<_, _>>()
+        );
+    }
+
+    let res = bg.prep_exec("SELECT email, question_id, answer FROM answers", vec![]);
+    for row in res {
+        let answer: String = from_value(row[2].clone());
+        if answer.trim().len() < 10 {
+            continue
+        }
+
+        let email: String = from_value(row[0].clone());
+        let question_id: u64 = from_value(row[1].clone());
+        let lecture_id = questions.get(&question_id).unwrap();
+        *users_map.get_mut(&email).unwrap().get_mut(lecture_id).unwrap() += 1;
+    }
+
+    let mut users = Vec::new();
+    for email in emails {
+        let lmap = users_map.get(&email).unwrap();
+
+        let mut counts = Vec::new();
+        let mut total = 0.0;
+        for lecture in &lectures {
+            let count = *lmap.get(&lecture.id).unwrap();
+            total += count as f64 / lecture.questions as f64;
+            counts.push(count);
+        }
+
+        users.push(GradingUserContext {
+           email,
+           total,
+           lectures: counts,
+        });
+    }
+
+    // Can drop now.
+    drop(bg);
+
+    let ctx = GradingContext {
+        lectures,
+        lectures_count,
+        users,
+        parent: "layout",
+    };
+    Template::render("admin/grade", &ctx)
+}

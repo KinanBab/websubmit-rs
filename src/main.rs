@@ -111,6 +111,7 @@ async fn main() {
             "/admin/lec",
             routes![admin::lec, admin::addq, admin::editq, admin::editq_submit],
         )
+        .mount("/admin/grading", routes![admin::grading])
         .launch()
         .await
     {

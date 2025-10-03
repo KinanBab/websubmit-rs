@@ -1,0 +1,32 @@
+{{#*inline "page"}}
+    <h1>Grading report</h1>
+
+    <table>
+      <tr>
+        <th>Email</th>
+        <th>Total (/{{{ lectures_count }}})</th>
+        {{#each lectures}}
+        <th>{{{ this.title }}} (/{{{ this.questions }}})</th>
+        {{/each}}
+      </tr>
+      {{#each users}}
+      <tr>
+        <td>{{{ this.email }}}</td>
+        <td>{{{ this.total }}}</td>
+        {{#each this.lectures}}
+        <td>{{{ this }}}</td>
+        {{/each}}
+      </tr>
+      {{/each}}
+    </table>
+
+    <hr>
+    <br><br><br>
+    <h3>CSV</h3>
+    <pre>
+Email,"Total (/{{{ lectures_count }}})"{{#each lectures}},"{{{ this.title }}} (/{{{ this.questions }}})"{{/each}}
+{{#each users}}"{{{ this.email }}}",{{{ this.total }}}{{#each this.lectures}},{{{ this }}}{{/each}}
+{{/each}}
+    </pre>
+{{/inline}}
+{{~> (parent)~}}
